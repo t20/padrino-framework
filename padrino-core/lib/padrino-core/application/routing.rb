@@ -84,6 +84,10 @@ class HttpRouter
 
       @_custom_conditions
     end
+
+    def significant_variable_names
+      @significant_variable_names ||= @original_path.nil? ? [] : @original_path.scan(/(^|[^\\])[:\*]([a-zA-Z0-9_]+)/).map{|p| p.last.to_sym}
+    end
   end
 end
 
@@ -585,7 +589,7 @@ module Padrino
           end
           options.delete_if do |option, args|
             if route.send(:significant_variable_names).include?(option)
-              route.matching(option => Array(args).first)
+              route.add_match_with(option => Array(args).first)
               true
             end
           end
@@ -646,8 +650,8 @@ module Padrino
 
             if @_use_format or format_params = options[:provides]
               process_path_for_provides(path, format_params)
-              options[:matching] ||= {}
-              options[:matching][:format] = /[^\.]+/
+              options[:add_match_with] ||= {}
+              options[:add_match_with][:format] = /[^\.]+/
             end
 
             absolute_map = map && map[0] == ?/
